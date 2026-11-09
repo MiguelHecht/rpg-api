@@ -1,79 +1,129 @@
-# API REST de Itens de RPG (Spring Boot + JPA + H2)
+# RPG API
 
-API CRUD com uma única entidade, **Item**, feita com Java 17, Spring Boot 3, Spring Data JPA, Bean Validation e banco H2.
+API REST para cadastro de itens de RPG, feita para o Trabalho 1 de Desenvolvimento de Sistemas.
 
-## Como rodar (CLI)
+**Alunos:**
+- Miguel Hecht Lemos Gouvêa
+- Fabio Roberto Queiroz Costa Junior
 
-Pré-requisitos: **JDK 17+** e **Maven 3.6+**.
+## Sobre o trabalho
+
+A aplicação é um CRUD completo de uma única entidade, o `Item` (espadas, armaduras, poções, etc.), com validação dos dados e tratamento de erros.
+
+Tecnologias usadas:
+
+- Java 17
+- Spring Boot 3 (Web, Data JPA e Validation)
+- Banco H2 (salvo em arquivo)
+- Maven
+
+## Como rodar
+
+Você precisa ter o JDK 17 (ou superior) e o Maven instalados.
+
+Na pasta do projeto, rode:
 
 ```bash
-mvn clean package        # compila e baixa dependências
-mvn spring-boot:run      # inicia a aplicação
+mvn clean package
+mvn spring-boot:run
 ```
 
-A API fica em `http://localhost:8081`. Console do banco: `http://localhost:8081/h2-console`
-(JDBC URL: `jdbc:h2:file:./data/rpgdb`, usuário `sa`, senha vazia).
+A API sobe em `http://localhost:8081`.
 
-## Entidade `Item`
+O banco é criado automaticamente na primeira execução, dentro da pasta `data/`. Para ver os dados pelo navegador, acesse `http://localhost:8081/h2-console` com:
+
+- JDBC URL: `jdbc:h2:file:./data/rpgdb`
+- Usuário: `sa`
+- Senha: (deixar em branco)
+
+## Entidade Item
 
 | Campo | Tipo | Regras |
 |---|---|---|
 | id | Long | Chave primária, gerada automaticamente |
-| nome | String | Obrigatório, 2 a 100 caracteres, único |
-| raridade | Enum | Obrigatório: COMUM, INCOMUM, RARO, EPICO, LENDARIO |
+| nome | String | Obrigatório, de 2 a 100 caracteres, não pode repetir |
+| raridade | Enum | Obrigatório: COMUM, INCOMUM, RARO, EPICO ou LENDARIO |
 | preco | Decimal | Obrigatório, maior ou igual a 0 |
 | nivelMinimo | Integer | Opcional, de 1 a 100 |
 
-## Endpoints
+## Rotas
 
-| Método | Rota | Descrição | Sucesso |
+| Método | Rota | O que faz | Resposta |
 |---|---|---|---|
-| GET | /api/itens | Lista todos (filtro opcional `?nome=`) | 200 |
-| GET | /api/itens/{id} | Busca por ID | 200 |
-| POST | /api/itens | Cria item | 201 |
-| PUT | /api/itens/{id} | Atualiza item completo | 200 |
-| DELETE | /api/itens/{id} | Remove item | 204 |
+| GET | /api/itens | Lista todos os itens (aceita `?nome=` para filtrar) | 200 |
+| GET | /api/itens/{id} | Busca um item pelo id | 200 |
+| POST | /api/itens | Cria um item | 201 |
+| PUT | /api/itens/{id} | Atualiza um item por completo | 200 |
+| DELETE | /api/itens/{id} | Remove um item | 204 |
 
-Erros: **400** (validação / JSON inválido), **404** (ID inexistente), **409** (nome duplicado).
+Códigos de erro:
 
-## Exemplos (cURL)
+- 400: dados inválidos ou JSON mal formado
+- 404: id não encontrado
+- 409: já existe um item com esse nome
 
-**POST** - criar
+## Exemplos de uso
+
+Os mesmos pedidos também estão prontos no arquivo `requests.http`, para usar com a extensão REST Client do VS Code.
+
+### Criar item (POST)
+
 ```bash
-curl -i -X POST http://localhost:8081/api/itens -H "Content-Type: application/json" \
+curl -i -X POST http://localhost:8081/api/itens \
+  -H "Content-Type: application/json" \
   -d '{"nome":"Espada Flamejante","raridade":"EPICO","preco":1500.00,"nivelMinimo":20}'
 ```
-Resposta `201 Created`:
+
+Resposta (201 Created):
+
 ```json
-{ "id": 1, "nome": "Espada Flamejante", "raridade": "EPICO", "preco": 1500.00, "nivelMinimo": 20 }
+{
+  "id": 1,
+  "nome": "Espada Flamejante",
+  "raridade": "EPICO",
+  "preco": 1500.00,
+  "nivelMinimo": 20
+}
 ```
 
-**GET** - listar / filtrar / por id
+### Listar, filtrar e buscar por id (GET)
+
 ```bash
 curl -i http://localhost:8081/api/itens
 curl -i "http://localhost:8081/api/itens?nome=espada"
 curl -i http://localhost:8081/api/itens/1
 ```
-Resposta `200 OK`: o item (ou lista de itens) em JSON.
 
-**PUT** - atualizar
+Resposta (200 OK): o item, ou a lista de itens, em JSON.
+
+### Atualizar item (PUT)
+
 ```bash
-curl -i -X PUT http://localhost:8081/api/itens/1 -H "Content-Type: application/json" \
+curl -i -X PUT http://localhost:8081/api/itens/1 \
+  -H "Content-Type: application/json" \
   -d '{"nome":"Espada Flamejante +1","raridade":"LENDARIO","preco":3000.00,"nivelMinimo":25}'
 ```
-Resposta `200 OK` com o item atualizado.
 
-**DELETE**
+Resposta (200 OK): o item com os dados atualizados.
+
+### Remover item (DELETE)
+
 ```bash
 curl -i -X DELETE http://localhost:8081/api/itens/1
 ```
-Resposta `204 No Content` (sem corpo).
 
-**Erro 400** (validação)
+Resposta: 204 No Content, sem corpo.
+
+## Exemplos de erro
+
+### 400 - dados inválidos
+
 ```bash
-curl -i -X POST http://localhost:8081/api/itens -H "Content-Type: application/json" \
+curl -i -X POST http://localhost:8081/api/itens \
+  -H "Content-Type: application/json" \
   -d '{"nome":"","preco":-5,"nivelMinimo":500}'
 ```
+
 ```json
 {
   "timestamp": "2026-10-26T10:00:00",
@@ -88,17 +138,34 @@ curl -i -X POST http://localhost:8081/api/itens -H "Content-Type: application/js
 }
 ```
 
-**Erro 404**: `GET /api/itens/999` -> `{"status":404,"mensagem":"Item com id 999 não encontrado",...}`
+### 404 - item não encontrado
 
-**Erro 409**: criar dois itens com o mesmo nome -> `{"status":409,"mensagem":"Já existe um item com o nome 'Espada Flamejante'",...}`
+`GET /api/itens/999`
 
-O arquivo `requests.http` tem todas as requisições prontas para a extensão REST Client do VS Code.
+```json
+{
+  "status": 404,
+  "mensagem": "Item com id 999 não encontrado"
+}
+```
 
-## Estrutura
+### 409 - nome repetido
+
+Ao criar dois itens com o mesmo nome:
+
+```json
+{
+  "status": 409,
+  "mensagem": "Já existe um item com o nome 'Espada Flamejante'"
+}
+```
+
+## Organização do código
 
 ```
-model/       Item (entidade + validações) e Raridade (enum)
-repository/  ItemRepository (JpaRepository)
-controller/  ItemController (endpoints REST)
-exception/   Exceções próprias e GlobalExceptionHandler
+src/main/java/com/rpg/api/
+├── controller/   ItemController (endpoints)
+├── model/        Item e Raridade
+├── repository/   ItemRepository (JpaRepository)
+└── exception/    exceções próprias e GlobalExceptionHandler
 ```
