@@ -4,7 +4,7 @@ API REST para cadastro de itens de RPG, feita para o Trabalho 1 de Desenvolvimen
 
 **Alunos:**
 - Miguel Hecht Lemos Gouvêa
-- Fabio Roberto Queiroz Costa Junior
+- Fábio Roberto Queiroz Costa Júnior
 
 ## Sobre o trabalho
 
